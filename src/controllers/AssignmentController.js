@@ -1,9 +1,7 @@
 import { AssignmentModel } from '../models/AssignmentModel';
-
+import { FileService } from '../services/fileService';
 export class AssignmentController {
-  // Add new assignment with validation
   static async addAssignment(assignmentData) {
-    // Validation
     if (!assignmentData.title || !assignmentData.title.trim()) {
       throw new Error('Assignment title is required');
     }
@@ -13,8 +11,6 @@ export class AssignmentController {
     if (!assignmentData.courseId) {
       throw new Error('Course selection is required');
     }
-
-    // Prepare data for model
     const assignmentDataForModel = {
       title: assignmentData.title.trim(),
       description: assignmentData.description?.trim() || '',
@@ -25,12 +21,8 @@ export class AssignmentController {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-
-    // Call model to create assignment
     return await AssignmentModel.create(assignmentDataForModel);
   }
-
-  // Delete assignment
   static async deleteAssignment(assignmentId) {
     if (!assignmentId) {
       throw new Error('Assignment ID is required');
@@ -39,7 +31,6 @@ export class AssignmentController {
     return await AssignmentModel.delete(assignmentId);
   }
 
-  // Toggle completion status
   static async toggleComplete(assignment) {
     if (!assignment.id) {
       throw new Error('Assignment ID is required');
@@ -107,4 +98,58 @@ export class AssignmentController {
       default: return '#6c757d'; // gray
     }
   }
+  // Upload file to assignment
+  static async uploadAssignmentFile(assignmentId, file, userId) {
+    try {
+      // Upload to Firebase Storage
+      const uploadResult = await FileService.uploadFile(file, assignmentId, userId);
+    
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error);
+      }
+      // Add reference to Firestore
+      const fileData = {
+        name: uploadResult.fileName,
+        url: uploadResult.downloadURL,
+        path: uploadResult.filePath,
+        size: uploadResult.size,
+        type: uploadResult.type,
+        uploadedAt: new Date()
+      };
+
+      await AssignmentModel.addFileReference(assignmentId, fileData);
+    
+      return { success: true, file: fileData };
+    } catch (error) {
+      throw new Error('Failed to upload file: ' + error.message);
+    }
+  }
+  // Delete file from assignment
+  static async deleteAssignmentFile(assignmentId, filePath, userId) {
+    try {
+      // Delete from Firebase Storage
+      const deleteResult = await FileService.deleteFile(filePath);
+    
+      if (!deleteResult.success) {
+        throw new Error(deleteResult.error);
+      }
+
+      // Remove reference from Firestore
+      await AssignmentModel.removeFileReference(assignmentId, filePath);
+    
+      return { success: true };
+    } catch (error) {
+      throw new Error('Failed to delete file: ' + error.message);
+    }
+  }
+  // Get assignment files
+  static async getAssignmentFiles(assignmentId, userId) {
+    try {
+      const result = await FileService.getAssignmentFiles(assignmentId, userId);
+      return result;
+    } catch (error) {
+      throw new Error('Failed to fetch files: ' + error.message);
+    }
+  }
+
 }

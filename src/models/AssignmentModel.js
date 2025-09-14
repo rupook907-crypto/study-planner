@@ -5,8 +5,10 @@ import {
   deleteDoc, 
   doc, 
   onSnapshot, 
+  getDocs,
   updateDoc,
-  getDocs 
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore';
 
 export class AssignmentModel {
@@ -58,4 +60,22 @@ export class AssignmentModel {
       }))
       .filter(assignment => assignment.courseId === courseId);
   }
-}
+
+  // Add file reference to assignment
+  static async addFileReference(assignmentId, fileData) {
+    const assignmentRef = doc(db, "assignments", assignmentId);
+    return await updateDoc(assignmentRef, {
+      files: arrayUnion(fileData),
+      updatedAt: new Date()
+    });
+  }
+
+  // Remove file reference from assignment
+  static async removeFileReference(assignmentId, filePath) {
+    const assignmentRef = doc(db, "assignments", assignmentId);
+    return await updateDoc(assignmentRef, {
+      files: arrayRemove({ path: filePath }),
+      updatedAt: new Date()
+    });
+  }
+} 

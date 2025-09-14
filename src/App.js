@@ -7,6 +7,7 @@ import AssignmentsView from './views/AssignmentsView';
 import ExamsView from './views/ExamsView'; 
 import ProgressView from './views/ProgressView';
 import ReminderView from './views/ReminderView';
+import ScheduleView from './views/ScheduleView';
 import './App.css';
 
 function App() {
@@ -104,6 +105,20 @@ function App() {
               >
                 Reminders
               </button>  
+              <button 
+                onClick={() => setCurrentView('schedule')}
+                style={{ 
+                  padding: '8px 16px', 
+                  background: currentView === 'schedule' ? '#007bff' : '#6c757d', 
+                  color: 'white', 
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+                >
+                Schedule
+            </button>  
+              
             </div>
             <div>
               <span>Welcome, {user.email} </span>
@@ -124,10 +139,11 @@ function App() {
         currentView === 'exams' ? <ExamsView /> :
         currentView === 'progress' ? <ProgressView /> :
         currentView === 'reminders' ? <ReminderView /> :
+        currentView === 'schedule' ? <ScheduleView /> :
         null
       )}
     </div>
   );
 }
 
-export default App;
+export default App; 
